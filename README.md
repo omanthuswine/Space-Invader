@@ -60,6 +60,7 @@ Design your class/interface hierarchy to maximize inheritance, polymorphism, and
 
 - Implement at least one complete level (win by destroying all waves of enemies).
 - Provide a Start, Pause, and Game Over UI; display Score and Lives.
+- Initialize the level layout and enemy in code (you may hard-code their positions directly).
 - Ensure smooth performance.
 
 ## How to Play
@@ -77,7 +78,7 @@ Design your class/interface hierarchy to maximize inheritance, polymorphism, and
 - Inheritance Design: Define an OOP hierarchy for all game classes +2 pts
 - Player Controls: Implement player movement and shooting via ←/→/↑/↓ keys and SPACE +1 pt
 - Enemy Spawning & Movement: Automatically spawn and move Enemy objects (including speed and pattern)  +1 pt
-- Projectile Management: Create and manage Bullet and EnemyBullet objects +2 pts
+- Projectile Management: Create and manage Bullet and EnemyBullet objects +1 pts
 - Collisions & Explosions: Detect when bullets hit objects (enemies, player), mark them dead, and display explosion effects  +1 pt
 - PowerUps: Randomly spawn PowerUp objects; upon collection, update player attributes (e.g., fireRate++, lives++) +1 pt
 - Basic UI: Implement Start/Pause/Game Over screens, display Score & Lives, and allow level retry on Game Over +2 pts
