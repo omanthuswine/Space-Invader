@@ -1,86 +1,149 @@
 package uet.oop.spaceshootergamejavafx.entities;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 /**
- * Skeleton for PowerUp. Students must implement movement,
- * rendering, and state management.
+ * PowerUp đại diện cho các vật phẩm hỗ trợ người chơi trong game.
+ * PowerUp sẽ di chuyển xuống phía dưới màn hình và biến mất khi ra khỏi biên.
  */
 public class PowerUp extends GameObject {
 
-    // Dimensions of the power-up
-    public static final int WIDTH = 20;
-    public static final int HEIGHT = 20;
+    /**
+     * Các loại PowerUp có thể xuất hiện trong game.
+     */
+    public enum PowerUpType {
+        HEALTH_PACK,  // Hồi máu
+        SHIELD,       // Khiên bảo vệ
+        TRIPLE_SHOT   // Bắn 3 viên đạn
+    }
 
-    // Fall speed of the power-up
+    public static final int WIDTH = 40;
+    public static final int HEIGHT = 40;
     private static final double SPEED = 2;
 
-    // Flag indicating whether the power-up should be removed
     private boolean dead;
+    private PowerUpType type;
+    private Image sprite;
+    private Image shieldSprite;
+    private Image tripleShotSprite;
 
     /**
-     * Constructs a PowerUp at the given position.
-     * @param x initial X position
-     * @param y initial Y position
+     * Tạo một PowerUp mới tại vị trí (x, y) với loại được chỉ định.
+     * @param x hoành độ tâm PowerUp
+     * @param y tung độ tâm PowerUp
+     * @param type loại PowerUp
      */
-    public PowerUp(double x, double y) {
+    public PowerUp(double x, double y, PowerUpType type) {
         super(x, y, WIDTH, HEIGHT);
-        // TODO: initialize dead flag, load sprite if needed
+        this.dead = false;
+        this.type = type;
+
+        try {
+            // Load sprite mặc định cho HEALTH_PACK hoặc power-up chung
+            this.sprite = new Image(getClass().getResourceAsStream("/powerup.png"));
+
+            // Load sprite riêng cho Shield
+            java.io.InputStream shieldStream = getClass().getResourceAsStream("/powerup_shield.gif");
+            if (shieldStream != null) {
+                this.shieldSprite = new Image(shieldStream);
+                shieldStream.close();
+            } else {
+                System.err.println("Không tìm thấy /powerup_shield.gif");
+            }
+
+            // Load sprite riêng cho Triple Shot
+            java.io.InputStream tripleShotStream = getClass().getResourceAsStream("/powerup_tripleshot.png");
+            if (tripleShotStream != null) {
+                this.tripleShotSprite = new Image(tripleShotStream);
+                tripleShotStream.close();
+            } else {
+                System.err.println("Không tìm thấy /powerup_tripleshot.png");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Không thể load power-up sprite(s): " + e.getMessage());
+            e.printStackTrace();
+            this.sprite = null;
+            this.shieldSprite = null;
+            this.tripleShotSprite = null;
+        }
     }
 
     /**
-     * Updates power-up position each frame.
+     * Lấy loại PowerUp hiện tại.
+     * @return loại PowerUp
+     */
+    public PowerUpType getType() {
+        return type;
+    }
+
+    /**
+     * Cập nhật vị trí của PowerUp mỗi frame, di chuyển xuống dưới.
+     * Nếu ra khỏi màn hình sẽ đánh dấu là dead.
      */
     @Override
     public void update() {
-        // TODO: move power-up vertically by SPEED
+        y += SPEED;
+        if (y - height / 2 > SpaceShooter.HEIGHT) {
+            dead = true;
+        }
     }
 
     /**
-     * Renders the power-up on the canvas.
-     * @param gc the GraphicsContext to draw on
+     * Vẽ PowerUp lên canvas.
+     * Nếu có sprite tương ứng sẽ vẽ, không thì vẽ hình chữ nhật màu thay thế.
+     * @param gc GraphicsContext của canvas game
      */
     @Override
     public void render(GraphicsContext gc) {
-        // TODO: draw sprite or fallback (e.g., colored rectangle)
+        Image currentSprite = null;
+        Color fallbackColor = Color.GOLD;
+
+        switch (type) {
+            case SHIELD:
+                currentSprite = shieldSprite;
+                fallbackColor = Color.DEEPSKYBLUE;
+                break;
+            case TRIPLE_SHOT:
+                currentSprite = tripleShotSprite;
+                fallbackColor = Color.ORANGERED;
+                break;
+            case HEALTH_PACK:
+            default:
+                currentSprite = sprite;
+                fallbackColor = Color.LIGHTGREEN;
+                break;
+        }
+
+        if (currentSprite != null) {
+            gc.drawImage(currentSprite, x - width / 2, y - height / 2, width, height);
+        } else {
+            gc.setFill(fallbackColor);
+            gc.fillRect(x - width / 2, y - height / 2, width, height);
+            gc.setStroke(Color.WHITE);
+            gc.strokeRect(x - width / 2, y - height / 2, width, height);
+        }
     }
 
-    /**
-     * Returns the width of the power-up.
-     * @return WIDTH
-     */
     @Override
     public double getWidth() {
-        // TODO: return width
         return WIDTH;
     }
 
-    /**
-     * Returns the height of the power-up.
-     * @return HEIGHT
-     */
     @Override
     public double getHeight() {
-        // TODO: return height
         return HEIGHT;
     }
 
-    /**
-     * Checks whether the power-up should be removed.
-     * @return true if dead
-     */
     @Override
     public boolean isDead() {
-        // TODO: return dead flag
         return dead;
     }
 
-    /**
-     * Marks this power-up as dead (to be removed).
-     * @param dead true if should be removed
-     */
+    @Override
     public void setDead(boolean dead) {
-        // TODO: update dead flag
         this.dead = dead;
     }
 }

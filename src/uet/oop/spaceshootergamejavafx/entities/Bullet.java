@@ -1,85 +1,118 @@
 package uet.oop.spaceshootergamejavafx.entities;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 /**
- * Skeleton for Bullet. Students must implement movement,
- * rendering, and state management.
+ * Lớp Bullet đại diện cho một viên đạn trong trò chơi.
+ * Đạn được bắn ra bởi Player hoặc Enemy và di chuyển theo một vận tốc nhất định.
  */
 public class Bullet extends GameObject {
 
-    // Width and height of the bullet
+    /** Chiều rộng mặc định của viên đạn. */
     public static final int WIDTH = 4;
+    /** Chiều cao mặc định của viên đạn. */
     public static final int HEIGHT = 15;
+    /** Tốc độ mặc định của viên đạn (thường là đạn của Player bắn lên). */
+    public static final double DEFAULT_SPEED = 5.0;
 
-    // Movement speed of the bullet
-    private static final double SPEED = 7;
-
-    // Flag to indicate if bullet should be removed
-    private boolean dead;
+    private double vx; // Vận tốc theo trục X
+    private double vy; // Vận tốc theo trục Y
+    private boolean dead; // Trạng thái "chết" của viên đạn (đã va chạm hoặc ra khỏi màn hình)
 
     /**
-     * Constructs a Bullet at the given position.
-     * @param x initial X position
-     * @param y initial Y position
+     * Khởi tạo một viên đạn với vị trí và vận tốc tùy chỉnh.
+     * Thường được sử dụng cho đạn của Enemy hoặc các loại đạn đặc biệt của Player.
+     *
+     * @param x  Vị trí ban đầu theo trục X (tâm của viên đạn).
+     * @param y  Vị trí ban đầu theo trục Y (tâm của viên đạn).
+     * @param vx Vận tốc theo trục X.
+     * @param vy Vận tốc theo trục Y.
      */
-    public Bullet(double x, double y) {
-        super(x, y, WIDTH, HEIGHT);
-        // TODO: initialize dead flag if needed
+    public Bullet(double x, double y, double vx, double vy) {
+        super(x, y, WIDTH, HEIGHT); // Gọi constructor của lớp cha GameObject
+        this.vx = vx;
+        this.vy = vy;
+        this.dead = false;
     }
 
     /**
-     * Updates bullet position each frame.
+     * Khởi tạo một viên đạn bắn thẳng lên từ một vị trí xác định.
+     * Đây là constructor mặc định cho đạn của Player.
+     *
+     * @param x Vị trí ban đầu theo trục X (tâm của viên đạn).
+     * @param y Vị trí ban đầu theo trục Y (tâm của viên đạn).
+     */
+    public Bullet(double x, double y) {
+        this(x, y, 0, -DEFAULT_SPEED); // Mặc định vx = 0, vy = -DEFAULT_SPEED (bắn thẳng lên)
+    }
+
+    /**
+     * Cập nhật trạng thái của viên đạn mỗi frame.
+     * Di chuyển viên đạn và kiểm tra xem nó có ra khỏi màn hình không.
      */
     @Override
     public void update() {
-        // TODO: move bullet vertically by SPEED
+        // Di chuyển viên đạn dựa trên vận tốc hiện tại
+        x += vx;
+        y += vy;
+
+        // Kiểm tra nếu viên đạn bay ra khỏi biên màn hình
+        // Viên đạn được coi là "chết" nếu hoàn toàn ra khỏi vùng nhìn thấy
+        if (y + height / 2 < 0 ||                 // Ra khỏi mép trên
+                y - height / 2 > SpaceShooter.HEIGHT || // Ra khỏi mép dưới
+                x + width / 2 < 0 ||                  // Ra khỏi mép trái
+                x - width / 2 > SpaceShooter.WIDTH) { // Ra khỏi mép phải
+            this.dead = true;
+        }
     }
 
     /**
-     * Renders the bullet on the canvas.
-     * @param gc the GraphicsContext to draw on
+     * Vẽ viên đạn lên màn hình.
+     * Mặc định viên đạn của Player có màu vàng.
+     * @param gc Đối tượng GraphicsContext để vẽ.
      */
     @Override
     public void render(GraphicsContext gc) {
-        // TODO: draw bullet (e.g., filled rectangle or sprite)
+        gc.setFill(Color.YELLOW);
+        // Vẽ hình chữ nhật đại diện cho viên đạn, với x, y là tâm
+        gc.fillRect(this.x - this.width / 2.0, this.y - this.height / 2.0, this.width, this.height);
     }
 
     /**
-     * Returns current width of the bullet.
-     * @return WIDTH
+     * Lấy chiều rộng của viên đạn.
+     * @return Chiều rộng của viên đạn.
      */
     @Override
     public double getWidth() {
-        // TODO: return bullet width
-        return WIDTH;
+        return this.width; // Trả về giá trị width đã được khởi tạo trong constructor của GameObject
     }
 
     /**
-     * Returns current height of the bullet.
-     * @return HEIGHT
+     * Lấy chiều cao của viên đạn.
+     * @return Chiều cao của viên đạn.
      */
     @Override
     public double getHeight() {
-        // TODO: return bullet height
-        return HEIGHT;
+        return this.height; // Trả về giá trị height đã được khởi tạo trong constructor của GameObject
     }
 
     /**
-     * Marks this bullet as dead (to be removed).
-     * @param dead true if bullet should be removed
+     * Đặt trạng thái "chết" cho viên đạn.
+     * Khi một viên đạn được đánh dấu là "chết", nó sẽ được loại bỏ khỏi game ở lần cập nhật tiếp theo.
+     * @param dead True nếu viên đạn đã chết, false nếu còn sống.
      */
+    @Override
     public void setDead(boolean dead) {
-        // TODO: update dead flag
+        this.dead = dead;
     }
 
     /**
-     * Checks if this bullet is dead.
-     * @return true if dead, false otherwise
+     * Kiểm tra xem viên đạn có đang ở trạng thái "chết" hay không.
+     * @return True nếu viên đạn đã chết, false nếu còn sống.
      */
     @Override
     public boolean isDead() {
-        // TODO: return dead flag
         return dead;
     }
 }
