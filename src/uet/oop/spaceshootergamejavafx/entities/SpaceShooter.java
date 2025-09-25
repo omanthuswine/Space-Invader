@@ -40,6 +40,7 @@ public class SpaceShooter extends Application {
 
     private int score;                    // Current player score
     private boolean gameRunning;          // Flag to track if the game is running
+    private boolean gamePaused = false;   // Flag to track if the game is paused
 
     private Label scoreLabel;             // UI label to display score
     private Label livesLabel;             // UI label to display lives left
@@ -99,7 +100,7 @@ public class SpaceShooter extends Application {
     private double backgroundY1 = 0;        // Y position of first background image
     private double backgroundY2;            // Y position of second background image (for looping)
     private double actualBackgroundImageHeight;  // Height of the background image
-    private final double BACKGROUND_SCROLL_SPEED = 0.3; // Scrolling speed of background
+    private final double BACKGROUND_SCROLL_SPEED = 0.5; // Scrolling speed of background
 
     /**
      * Main method launching the application.
@@ -124,7 +125,9 @@ public class SpaceShooter extends Application {
             @Override
             public void handle(long now) {
                 if (gameRunning) {
-                    updateGame();
+                    if (!gamePaused) {
+                        updateGame();
+                    }
                     renderGame();
                 }
             }
@@ -443,6 +446,23 @@ public class SpaceShooter extends Application {
         // Vẽ tất cả đối tượng game
         for (GameObject obj : gameObjects) {
             obj.render(gc);
+        }
+
+        if (gamePaused) {
+            // Vẽ một lớp phủ mờ
+            gc.setFill(Color.rgb(0, 0, 0, 0.5)); // Màu đen với 50% độ trong suốt
+            gc.fillRect(0, 0, WIDTH, HEIGHT);
+
+            // Vẽ chữ "PAUSED"
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 50));
+            String pauseText = "PAUSED";
+
+            // Tính toán để căn giữa chữ
+            javafx.scene.text.Text text = new javafx.scene.text.Text(pauseText);
+            text.setFont(gc.getFont());
+            double textWidth = text.getLayoutBounds().getWidth();
+            gc.fillText(pauseText, (WIDTH - textWidth) / 2, HEIGHT / 2.0);
         }
     }
 
@@ -922,6 +942,7 @@ public class SpaceShooter extends Application {
     private void startGame() {
         restartGameMechanics();
         gameRunning = true;
+        this.gamePaused = false; // Đảm bảo game bắt đầu không bị pause
         primaryStage.setScene(gameScene);
         if (gameLoop != null) {
             gameLoop.start();
@@ -934,6 +955,7 @@ public class SpaceShooter extends Application {
      */
     private void resetGame() {
         gameRunning = false;
+        this.gamePaused = false; // Đảm bảo game không bị pause khi hiển thị màn hình thua
         showLosingScreen();
     }
 
@@ -1012,6 +1034,7 @@ public class SpaceShooter extends Application {
         backToMenuButton.setPrefWidth(200);
 
         winLayout.getChildren().addAll(winMsg, finalScoreMsg, playAgainButton, backToMenuButton);
+        this.gamePaused = false; // Đảm bảo không bị che bởi màn hình pause
         Scene winScene = new Scene(winLayout, WIDTH, HEIGHT);
         primaryStage.setScene(winScene);
     }
@@ -1031,7 +1054,8 @@ public class SpaceShooter extends Application {
         String[] instructionsText = {
                 "Use A, W, S, D or Arrow keys to move your spaceship.",
                 "Press SPACE to shoot bullets and destroy enemies.",
-                "Press SHIFT to toggle AI control mode.", // <-- DÒNG MỚI ĐƯỢC THÊM
+                "Press SHIFT to toggle AI control mode.",
+                "Press P to PAUSE or RESUME the game.",
                 "If an enemy reaches the bottom of the screen, you lose a life.",
                 "The game ends if you lose all lives.",
                 "Collect power-ups to increase your score or gain benefits (max 5 lives).",
@@ -1058,7 +1082,8 @@ public class SpaceShooter extends Application {
     /**
      * Khởi tạo các handler sự kiện bàn phím cho một Scene cụ thể.
      * - SHIFT: bật/tắt chế độ AI điều khiển.
-     * - Các phím di chuyển và bắn chỉ có tác dụng khi AI tắt và game đang chạy.
+     * - P: bật/tắt tạm dừng game.
+     * - Các phím di chuyển và bắn chỉ có tác dụng khi AI tắt, game đang chạy và không bị tạm dừng.
      *
      * @param targetScene Scene cần gán handler sự kiện
      */
@@ -1074,11 +1099,18 @@ public class SpaceShooter extends Application {
                     // Xóa focus khỏi các nút để tránh bắt phím space
                     gameRootPane.requestFocus();
                 }
+                event.consume();
                 return; // Không xử lý thêm các phím khác trong trường hợp SHIFT
             }
 
-            if (!isAIControlled && gameRunning && !player.isDead()) {
-                // Xử lý các phím điều khiển khi AI tắt và game đang chạy
+            if (event.getCode() == KeyCode.P && gameRunning) { // Chỉ cho phép pause khi game đang chạy
+                togglePause();
+                event.consume(); // Ngăn sự kiện được xử lý thêm
+                return;
+            }
+
+            if (!isAIControlled && gameRunning && !player.isDead() && !gamePaused) {
+                // Xử lý các phím điều khiển khi AI tắt, game đang chạy, player không chết VÀ KHÔNG PAUSE
                 switch (event.getCode()) {
                     case LEFT, A -> player.setMoveLeft(true);
                     case RIGHT, D -> player.setMoveRight(true);
@@ -1090,7 +1122,7 @@ public class SpaceShooter extends Application {
         });
 
         targetScene.setOnKeyReleased(event -> {
-            if (!isAIControlled) {
+            if (!isAIControlled && !gamePaused) { // Chỉ xử lý khi nhả phím nếu không AI và không pause
                 // Xử lý khi nhả phím để dừng di chuyển
                 switch (event.getCode()) {
                     case LEFT, A -> player.setMoveLeft(false);
@@ -1101,6 +1133,25 @@ public class SpaceShooter extends Application {
                 }
             }
         });
+    }
+
+    /**
+     * Chuyển đổi trạng thái tạm dừng/tiếp tục của game.
+     */
+    private void togglePause() {
+        gamePaused = !gamePaused;
+        if (gamePaused) {
+            System.out.println("Game Paused");
+            // Tùy chọn: Dừng âm thanh nếu có thể (AudioClip không hỗ trợ trực tiếp)
+        } else {
+            System.out.println("Game Resumed");
+            // Tùy chọn: Tiếp tục âm thanh
+            // Đảm bảo player không bị kẹt trạng thái di chuyển/bắn từ trước khi pause
+            if (!isAIControlled) { // Nếu người chơi đang điều khiển
+                player.resetMovementFlags(); // Reset các cờ di chuyển
+                player.setWantsToShoot(false); // Không muốn bắn ngay khi resume
+            }
+        }
     }
 
 

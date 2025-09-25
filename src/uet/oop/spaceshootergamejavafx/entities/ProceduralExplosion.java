@@ -18,7 +18,7 @@ public abstract class ProceduralExplosion extends GameObject {
     private long startTime;
     private final long DURATION_MS; // Thời gian tồn tại của vụ nổ (ms)
 
-    private static final int NUM_PARTICLES = 30; // Số lượng hạt
+    private static final int NUM_PARTICLES = 45; // Số lượng hạt
     private static final double MAX_PARTICLE_SPEED = 2.5;
     private static final double MIN_PARTICLE_SPEED = 0.5;
     private static final double PARTICLE_DECELERATION = 0.03; // Tỷ lệ giảm tốc hạt

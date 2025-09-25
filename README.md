@@ -66,7 +66,7 @@ Một trong những điểm đặc biệt của trò chơi này là hệ thống
 5.  Cố gắng sống sót, thu thập vật phẩm và đạt điểm cao!
 6.  Nhấn `SHIFT` bất cứ lúc nào để xem AI trình diễn kỹ năng né đạn và chiến đấu.
 
-## Thông Tin Kỹ Thuật (Tùy chọn)
+## Thông Tin Kỹ Thuật
 * **Ngôn ngữ:** Java
 * **Thư viện đồ họa:** JavaFX
 * **Mô hình:** Lập trình hướng đối tượng (OOP)
